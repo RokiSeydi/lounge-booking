@@ -413,7 +413,7 @@
       // PASTE YOUR GOOGLE APPS SCRIPT URL BELOW
       // =============================================
       const API_URL =
-        "https://script.google.com/macros/s/AKfycby7GnL5FxMusWVq2meIadvIj_YuNfnfrehMCEkAHcqT3n5j21FUoCOetUTIuCzGxplmAw/exec";
+        "https://script.google.com/macros/s/AKfycbxbc_weEq6gYIGhZLkmT1cRM5Qq_QVTFkjG6BRGXWA9AFOFbUutbKfD0hdwD3ECQ1FARw/exec";
       // =============================================
 
       let bookings = [];
@@ -581,11 +581,17 @@
         return div.innerHTML;
       }
 
-      // --- API calls ---
+      // --- API calls (all GET to avoid CORS redirect issues) ---
+      async function apiCall(action, data) {
+        let url = `${API_URL}?action=${action}`;
+        if (data) url += `&data=${encodeURIComponent(JSON.stringify(data))}`;
+        const res = await fetch(url);
+        return res.json();
+      }
+
       async function fetchBookings() {
         try {
-          const res = await fetch(`${API_URL}?action=getBookings`);
-          const data = await res.json();
+          const data = await apiCall("getBookings");
           bookings = data.bookings || [];
           renderCalendar();
           if (selectedDate) showDateBookings(selectedDate);
@@ -610,11 +616,7 @@
         };
 
         try {
-          const res = await fetch(`${API_URL}?action=addBooking`, {
-            method: "POST",
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
+          const data = await apiCall("addBooking", payload);
 
           if (data.error) {
             showToast(data.error, true);
@@ -635,11 +637,7 @@
         if (!confirm(`Cancel ${name}'s booking?`)) return;
 
         try {
-          const res = await fetch(`${API_URL}?action=deleteBooking`, {
-            method: "POST",
-            body: JSON.stringify({ id }),
-          });
-          const data = await res.json();
+          const data = await apiCall("deleteBooking", { id });
           if (data.error) {
             showToast(data.error, true);
           } else {

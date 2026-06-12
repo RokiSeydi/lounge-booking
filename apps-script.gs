@@ -7,48 +7,38 @@
 // 3. Execute as: Me
 // 4. Who has access: Anyone
 // 5. Copy the deployment URL and paste it into index.html
+//
+// IMPORTANT: Every time you edit this code, you must create a
+// NEW deployment (Deploy > New deployment), not just save.
+// Then update the URL in index.html if it changed.
 // =============================================================
 
 const SHEET_NAME = 'Bookings';
 
 function doGet(e) {
-  return handleRequest(e);
-}
-
-function doPost(e) {
-  return handleRequest(e);
-}
-
-function handleRequest(e) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-  };
-
   try {
     const action = e.parameter.action;
+    const payload = e.parameter.data ? JSON.parse(e.parameter.data) : null;
 
     if (action === 'getBookings') {
-      return respond(getBookings(), headers);
+      return respond(getBookings());
     }
 
-    if (action === 'addBooking') {
-      const data = JSON.parse(e.postData.contents);
-      return respond(addBooking(data), headers);
+    if (action === 'addBooking' && payload) {
+      return respond(addBooking(payload));
     }
 
-    if (action === 'deleteBooking') {
-      const data = JSON.parse(e.postData.contents);
-      return respond(deleteBooking(data), headers);
+    if (action === 'deleteBooking' && payload) {
+      return respond(deleteBooking(payload));
     }
 
-    return respond({ error: 'Unknown action' }, headers);
+    return respond({ error: 'Unknown action' });
   } catch (err) {
-    return respond({ error: err.message }, headers);
+    return respond({ error: err.message });
   }
 }
 
-function respond(data, headers) {
+function respond(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
