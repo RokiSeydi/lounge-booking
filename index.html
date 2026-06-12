@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Communal Lounge Booking</title>
+    <style>
+      :root {
+        --primary: #2563eb;
+        --primary-light: #dbeafe;
+        --danger: #dc2626;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-500: #6b7280;
+        --gray-700: #374151;
+        --gray-900: #111827;
+        --radius: 12px;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--gray-50);
+        color: var(--gray-900);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+
+      header {
+        text-align: center;
+        padding: 24px 0 16px;
+      }
+
+      header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      header p {
+        color: var(--gray-500);
+        font-size: 0.9rem;
+      }
+
+      /* Calendar navigation */
+      .cal-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .cal-nav h2 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .cal-nav button {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--gray-700);
+      }
+
+      .cal-nav button:hover {
+        background: var(--gray-100);
+      }
+
+      /* Calendar grid */
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+        background: white;
+        border-radius: var(--radius);
+        overflow: hidden;
+        border: 1px solid var(--gray-200);
+        margin-bottom: 20px;
+      }
+
+      .cal-grid .day-header {
+        text-align: center;
+        padding: 10px 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        background: var(--gray-50);
+        text-transform: uppercase;
+      }
+
+      .cal-grid .day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer;
+        position: relative;
+        background: white;
+        transition: background 0.15s;
+      }
+
+      .cal-grid .day:hover {
+        background: var(--gray-100);
+      }
+      .cal-grid .day.other-month {
+        color: var(--gray-300);
+      }
+      .cal-grid .day.today {
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .cal-grid .day.selected {
+        background: var(--primary);
+        color: white;
+        font-weight: 600;
+      }
+
+      .cal-grid .day.has-booking::after {
+        content: "";
+        position: absolute;
+        bottom: 6px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+
+      .cal-grid .day.selected.has-booking::after {
+        background: white;
+      }
+
+      /* Panels */
+      .panel {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .panel h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 14px;
+      }
+
+      /* Booking form */
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--gray-500);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        background: var(--gray-50);
+        transition: border-color 0.15s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: white;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: opacity 0.15s;
+      }
+
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+      .btn-primary:hover:not(:disabled) {
+        opacity: 0.9;
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: white;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        width: auto;
+      }
+      .btn-danger:hover {
+        opacity: 0.9;
+      }
+
+      /* Booking list */
+      .booking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border-radius: 8px;
+        background: var(--gray-50);
+        margin-bottom: 8px;
+      }
+
+      .booking-item .info {
+        flex: 1;
+      }
+      .booking-item .info .name {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .booking-item .info .flat {
+        color: var(--gray-500);
+        font-size: 0.85rem;
+      }
+      .booking-item .info .time {
+        color: var(--primary);
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-top: 2px;
+      }
+      .booking-item .info .notes {
+        color: var(--gray-500);
+        font-size: 0.85rem;
+        margin-top: 2px;
+        font-style: italic;
+      }
+
+      .no-bookings {
+        text-align: center;
+        color: var(--gray-500);
+        padding: 20px;
+        font-size: 0.9rem;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(80px);
+        background: var(--gray-900);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: transform 0.3s ease;
+        z-index: 100;
+      }
+
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.error {
+        background: var(--danger);
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--gray-500);
+      }
+
+      .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid var(--gray-200);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin: 0 auto 8px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .cal-grid .day {
+          font-size: 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Communal Lounge</h1>
+        <p>Tap a date to view or add a booking</p>
+      </header>
+
+      <!-- Calendar -->
+      <div class="cal-nav">
+        <button onclick="changeMonth(-1)">&larr; Prev</button>
+        <h2 id="monthLabel"></h2>
+        <button onclick="changeMonth(1)">Next &rarr;</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+
+      <!-- Bookings for selected date -->
+      <div class="panel" id="datePanel" style="display: none">
+        <h3 id="datePanelTitle">Bookings</h3>
+        <div id="bookingsList"></div>
+      </div>
+
+      <!-- Booking form -->
+      <div class="panel" id="formPanel" style="display: none">
+        <h3>New Booking</h3>
+        <form id="bookingForm" onsubmit="submitBooking(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your Name *</label>
+              <input type="text" id="fname" required placeholder="e.g. Roki" />
+            </div>
+            <div class="form-group">
+              <label>Flat / Unit</label>
+              <input type="text" id="flat" placeholder="e.g. 4B" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Time *</label>
+              <select
+                id="startTime"
+                required
+                onchange="updateEndTimes()"
+              ></select>
+            </div>
+            <div class="form-group">
+              <label>End Time *</label>
+              <select id="endTime" required></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea
+              id="notes"
+              placeholder="e.g. Birthday party, expecting ~15 guests"
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            Book Lounge
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // =============================================
+      // PASTE YOUR GOOGLE APPS SCRIPT URL BELOW
+      // =============================================
+      const API_URL =
+        "https://script.google.com/macros/s/AKfycbzbgLfHsijKJqlYZr8aE2hmQsP38UYldLsgLH5mZMpzT8HP_REjZlkPaetGEgh2gWGuCw/exec";
+      // =============================================
+
+      let bookings = [];
+      let currentMonth = new Date();
+      let selectedDate = null;
+
+      // --- Time helpers ---
+      function generateTimeSlots() {
+        const slots = [];
+        for (let h = 7; h <= 23; h++) {
+          slots.push(`${String(h).padStart(2, "0")}:00`);
+          slots.push(`${String(h).padStart(2, "0")}:30`);
+        }
+        return slots;
+      }
+
+      const TIME_SLOTS = generateTimeSlots();
+
+      function populateStartTimes() {
+        const sel = document.getElementById("startTime");
+        sel.innerHTML = '<option value="">Select</option>';
+        TIME_SLOTS.forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
+          sel.appendChild(opt);
+        });
+      }
+
+      function updateEndTimes() {
+        const start = document.getElementById("startTime").value;
+        const sel = document.getElementById("endTime");
+        sel.innerHTML = '<option value="">Select</option>';
+        if (!start) return;
+        const idx = TIME_SLOTS.indexOf(start);
+        TIME_SLOTS.slice(idx + 1).forEach((t) => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
+          sel.appendChild(opt);
+        });
+        // Add midnight
+        const opt = document.createElement("option");
+        opt.value = "00:00";
+        opt.textContent = "00:00 (midnight)";
+        sel.appendChild(opt);
+      }
+
+      // --- Calendar rendering ---
+      function renderCalendar() {
+        const grid = document.getElementById("calGrid");
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        document.getElementById("monthLabel").textContent = new Date(
+          year,
+          month,
+        ).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Monday start
+
+        const today = new Date();
+        const todayStr = formatDate(today);
+
+        // Dates with bookings
+        const bookedDates = new Set(bookings.map((b) => b.date));
+
+        let html = "";
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach((d) => {
+          html += `<div class="day-header">${d}</div>`;
+        });
+
+        // Previous month padding
+        const prevMonthDays = new Date(year, month, 0).getDate();
+        for (let i = startOffset - 1; i >= 0; i--) {
+          const d = prevMonthDays - i;
+          html += `<div class="day other-month">${d}</div>`;
+        }
+
+        // Current month days
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const classes = ["day"];
+          if (dateStr === todayStr) classes.push("today");
+          if (selectedDate === dateStr) classes.push("selected");
+          if (bookedDates.has(dateStr)) classes.push("has-booking");
+          html += `<div class="${classes.join(" ")}" onclick="selectDate('${dateStr}')">${d}</div>`;
+        }
+
+        // Next month padding
+        const totalCells = startOffset + daysInMonth;
+        const remaining = (7 - (totalCells % 7)) % 7;
+        for (let d = 1; d <= remaining; d++) {
+          html += `<div class="day other-month">${d}</div>`;
+        }
+
+        grid.innerHTML = html;
+      }
+
+      function changeMonth(delta) {
+        currentMonth.setMonth(currentMonth.getMonth() + delta);
+        renderCalendar();
+      }
+
+      function selectDate(dateStr) {
+        selectedDate = dateStr;
+        renderCalendar();
+        showDateBookings(dateStr);
+        document.getElementById("formPanel").style.display = "block";
+      }
+
+      function formatDate(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      }
+
+      function formatDateNice(dateStr) {
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        });
+      }
+
+      // --- Bookings display ---
+      function showDateBookings(dateStr) {
+        const panel = document.getElementById("datePanel");
+        const list = document.getElementById("bookingsList");
+        const title = document.getElementById("datePanelTitle");
+
+        title.textContent = formatDateNice(dateStr);
+        panel.style.display = "block";
+
+        const dayBookings = bookings
+          .filter((b) => b.date === dateStr)
+          .sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+        if (dayBookings.length === 0) {
+          list.innerHTML =
+            '<div class="no-bookings">No bookings yet - be the first!</div>';
+          return;
+        }
+
+        list.innerHTML = dayBookings
+          .map(
+            (b) => `
+    <div class="booking-item">
+      <div class="info">
+        <div class="name">${escapeHtml(b.name)}${b.flat ? ` <span class="flat">(${escapeHtml(b.flat)})</span>` : ""}</div>
+        <div class="time">${b.startTime} – ${b.endTime}</div>
+        ${b.notes ? `<div class="notes">${escapeHtml(b.notes)}</div>` : ""}
+      </div>
+      <button class="btn btn-danger" onclick="cancelBooking('${b.id}', '${escapeHtml(b.name)}')">Cancel</button>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // --- API calls ---
+      async function fetchBookings() {
+        try {
+          const res = await fetch(`${API_URL}?action=getBookings`);
+          const data = await res.json();
+          bookings = data.bookings || [];
+          renderCalendar();
+          if (selectedDate) showDateBookings(selectedDate);
+        } catch (err) {
+          showToast("Could not load bookings", true);
+        }
+      }
+
+      async function submitBooking(e) {
+        e.preventDefault();
+        const btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.textContent = "Booking...";
+
+        const payload = {
+          name: document.getElementById("fname").value.trim(),
+          flat: document.getElementById("flat").value.trim(),
+          date: selectedDate,
+          startTime: document.getElementById("startTime").value,
+          endTime: document.getElementById("endTime").value,
+          notes: document.getElementById("notes").value.trim(),
+        };
+
+        try {
+          const res = await fetch(`${API_URL}?action=addBooking`, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+
+          if (data.error) {
+            showToast(data.error, true);
+          } else {
+            showToast("Booked!");
+            document.getElementById("bookingForm").reset();
+            await fetchBookings();
+          }
+        } catch (err) {
+          showToast("Something went wrong", true);
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Book Lounge";
+      }
+
+      async function cancelBooking(id, name) {
+        if (!confirm(`Cancel ${name}'s booking?`)) return;
+
+        try {
+          const res = await fetch(`${API_URL}?action=deleteBooking`, {
+            method: "POST",
+            body: JSON.stringify({ id }),
+          });
+          const data = await res.json();
+          if (data.error) {
+            showToast(data.error, true);
+          } else {
+            showToast("Booking cancelled");
+            await fetchBookings();
+          }
+        } catch (err) {
+          showToast("Could not cancel", true);
+        }
+      }
+
+      // --- Toast ---
+      function showToast(msg, isError = false) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className = "toast show" + (isError ? " error" : "");
+        setTimeout(() => (t.className = "toast"), 3000);
+      }
+
+      // --- Init ---
+      populateStartTimes();
+      renderCalendar();
+      fetchBookings();
+    </script>
+  </body>
+</html>
