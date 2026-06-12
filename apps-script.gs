@@ -62,14 +62,16 @@ function getBookings() {
   if (rows.length <= 1) return { bookings: [] };
 
   const bookings = rows.slice(1).map(row => ({
-    id: row[0],
-    name: row[1],
-    flat: row[2],
-    date: row[3],
-    startTime: row[4],
-    endTime: row[5],
-    notes: row[6],
-    createdAt: row[7],
+    id: String(row[0]),
+    name: String(row[1]),
+    flat: String(row[2]),
+    date: row[3] instanceof Date
+      ? Utilities.formatDate(row[3], Session.getScriptTimeZone(), 'yyyy-MM-dd')
+      : String(row[3]),
+    startTime: String(row[4]),
+    endTime: String(row[5]),
+    notes: String(row[6]),
+    createdAt: String(row[7]),
   }));
 
   return { bookings };
