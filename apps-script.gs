@@ -68,8 +68,12 @@ function getBookings() {
     date: row[3] instanceof Date
       ? Utilities.formatDate(row[3], Session.getScriptTimeZone(), 'yyyy-MM-dd')
       : String(row[3]),
-    startTime: String(row[4]),
-    endTime: String(row[5]),
+    startTime: row[4] instanceof Date
+      ? Utilities.formatDate(row[4], Session.getScriptTimeZone(), 'HH:mm')
+      : String(row[4]),
+    endTime: row[5] instanceof Date
+      ? Utilities.formatDate(row[5], Session.getScriptTimeZone(), 'HH:mm')
+      : String(row[5]),
     notes: String(row[6]),
     createdAt: String(row[7]),
   }));
